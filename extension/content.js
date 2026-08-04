@@ -92,11 +92,27 @@
     return match ? match[1] : url;
   }
 
+  // On the board root page, section tiles show up to 3 cover images pulled from that
+  // section's own pins — those live inside the section tile's <a href=".../section-slug/">
+  // and aren't standalone root pins. Excluding them fixed a real bug: collecting root
+  // grabbed these covers as "unorganized" pins, and the later real section collection got
+  // deduped against them by image hash, leaving the actual sections empty.
+  function isInsideSectionTileLink(img, sectionHrefs) {
+    let el = img;
+    for (let i = 0; i < 8 && el; i++) {
+      if (el.tagName === "A" && sectionHrefs.has(el.getAttribute("href"))) return true;
+      el = el.parentElement;
+    }
+    return false;
+  }
+
   function collectVisiblePins() {
+    const sectionHrefs = new Set(detectSectionLinks().map((s) => s.href));
     const seen = new Map();
     document.querySelectorAll("img").forEach((img) => {
       const rawSrc = img.currentSrc || img.getAttribute("src") || img.getAttribute("srcset")?.split(" ")[0];
       if (!rawSrc || !isPinContentImage(rawSrc)) return;
+      if (isInsideSectionTileLink(img, sectionHrefs)) return;
       const key = imageKey(rawSrc);
       if (seen.has(key)) return;
       seen.set(key, {
