@@ -164,10 +164,16 @@ export const db = {
     }
 
     const existingSourceUrls = new Set(store.pins.map((p) => p.sourceUrl).filter(Boolean));
+    // Pins collected via the browser extension have no sourceUrl (Pinterest doesn't expose
+    // a per-pin link on every page template) — fall back to deduping by image URL for those.
+    const existingImageUrls = new Set(store.pins.map((p) => p.imageUrl));
     let created = 0;
     let skipped = 0;
     for (const pinInput of input.pins) {
-      if (pinInput.sourceUrl && existingSourceUrls.has(pinInput.sourceUrl)) {
+      const isDuplicate = pinInput.sourceUrl
+        ? existingSourceUrls.has(pinInput.sourceUrl)
+        : existingImageUrls.has(pinInput.imageUrl);
+      if (isDuplicate) {
         skipped++;
         continue;
       }
@@ -183,6 +189,7 @@ export const db = {
       };
       store.pins.push(pin);
       if (pinInput.sourceUrl) existingSourceUrls.add(pinInput.sourceUrl);
+      else existingImageUrls.add(pinInput.imageUrl);
       created++;
     }
 

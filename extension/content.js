@@ -78,23 +78,30 @@
     return url.replace(/\/(\d+x\d*|\d+x)\//, "/736x/");
   }
 
-  function extractPinId(href) {
-    const match = href.match(/\/pin\/(\d+)/);
-    return match ? match[1] : null;
+  // Pinterest's content images live under a plain size folder (/236x/, /474x/, ...).
+  // Avatars/icons always carry an "_RS" suffix (/75x75_RS/) — that's the reliable split,
+  // confirmed against real board markup, since there's no <a href="/pin/..."> to key off
+  // (Pinterest doesn't wrap pin cards in real links on this page template — no ID or
+  // source link is recoverable from the DOM here).
+  function isPinContentImage(url) {
+    return /i\.pinimg\.com\/\d+x\d*\//.test(url) && !/_RS\//.test(url);
+  }
+
+  function imageKey(url) {
+    const match = url.match(/\/\d+x\d*\/(.+)$/);
+    return match ? match[1] : url;
   }
 
   function collectVisiblePins() {
     const seen = new Map();
-    const anchors = document.querySelectorAll('a[href*="/pin/"]');
-    anchors.forEach((a) => {
-      const pinId = extractPinId(a.getAttribute("href") || "");
-      if (!pinId || seen.has(pinId)) return;
-      const img = a.querySelector("img");
-      if (!img) return;
-      const rawSrc = img.getAttribute("src") || img.getAttribute("srcset")?.split(" ")[0];
-      if (!rawSrc) return;
-      seen.set(pinId, {
-        sourceUrl: `https://www.pinterest.com/pin/${pinId}/`,
+    document.querySelectorAll("img").forEach((img) => {
+      const rawSrc = img.currentSrc || img.getAttribute("src") || img.getAttribute("srcset")?.split(" ")[0];
+      if (!rawSrc || !isPinContentImage(rawSrc)) return;
+      const key = imageKey(rawSrc);
+      if (seen.has(key)) return;
+      seen.set(key, {
+        key,
+        sourceUrl: null, // no per-pin link/ID recoverable from this page's DOM
         imageUrl: upsizeImage(rawSrc),
         title: img.getAttribute("alt")?.trim() || null,
       });
@@ -106,13 +113,13 @@
     let lastCount = 0;
     let stableRounds = 0;
     const maxRounds = 60; // safety cap so a huge/infinite board doesn't loop forever
-    let all = new Map(collectVisiblePins().map((p) => [p.sourceUrl, p]));
+    let all = new Map(collectVisiblePins().map((p) => [p.key, p]));
 
     for (let round = 0; round < maxRounds; round++) {
       window.scrollTo(0, document.body.scrollHeight);
       await new Promise((r) => setTimeout(r, 700));
 
-      collectVisiblePins().forEach((p) => all.set(p.sourceUrl, p));
+      collectVisiblePins().forEach((p) => all.set(p.key, p));
       onProgress?.(all.size);
 
       if (all.size === lastCount) {
@@ -124,7 +131,7 @@
       lastCount = all.size;
     }
 
-    return Array.from(all.values());
+    return Array.from(all.values()).map(({ key, ...pin }) => pin);
   }
 
   async function getStoredCollection(boardKey) {
