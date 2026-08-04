@@ -138,4 +138,55 @@ export const db = {
     save(store);
     return section ?? null;
   },
+  bulkImport(input: {
+    boardName: string;
+    sectionName: string | null;
+    pins: { imageUrl: string; sourceUrl: string | null; title: string | null }[];
+  }): { boardId: string; sectionId: string | null; created: number; skipped: number } {
+    const store = load();
+
+    let board = store.boards.find((b) => b.name.toLowerCase() === input.boardName.toLowerCase());
+    if (!board) {
+      board = { id: id("board"), name: input.boardName, createdAt: Date.now() };
+      store.boards.push(board);
+    }
+
+    let sectionId: string | null = null;
+    if (input.sectionName) {
+      let section = store.sections.find(
+        (s) => s.boardId === board!.id && s.name.toLowerCase() === input.sectionName!.toLowerCase()
+      );
+      if (!section) {
+        section = { id: id("section"), boardId: board.id, name: input.sectionName, createdAt: Date.now() };
+        store.sections.push(section);
+      }
+      sectionId = section.id;
+    }
+
+    const existingSourceUrls = new Set(store.pins.map((p) => p.sourceUrl).filter(Boolean));
+    let created = 0;
+    let skipped = 0;
+    for (const pinInput of input.pins) {
+      if (pinInput.sourceUrl && existingSourceUrls.has(pinInput.sourceUrl)) {
+        skipped++;
+        continue;
+      }
+      const pin: Pin = {
+        id: id("pin"),
+        boardId: board.id,
+        sectionId,
+        imageUrl: pinInput.imageUrl,
+        sourceUrl: pinInput.sourceUrl ?? null,
+        title: pinInput.title ?? null,
+        note: "",
+        createdAt: Date.now(),
+      };
+      store.pins.push(pin);
+      if (pinInput.sourceUrl) existingSourceUrls.add(pinInput.sourceUrl);
+      created++;
+    }
+
+    save(store);
+    return { boardId: board.id, sectionId, created, skipped };
+  },
 };

@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "moodnest board exporter",
+  "version": "0.1.0",
+  "description": "Collect pins from a Pinterest board (or section) you're viewing and send them to your local moodnest app.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://*.pinterest.com/*", "http://localhost:5173/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.pinterest.com/*"],
+      "js": ["content.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "moodnest board exporter"
+  }
+}

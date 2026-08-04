@@ -1,0 +1,122 @@
+#moodnest-overlay {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999999;
+  width: 280px;
+  background: #17181c;
+  border: 1px solid #262832;
+  border-radius: 8px;
+  color: #e6e6e9;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 12px;
+}
+
+#moodnest-overlay * {
+  box-sizing: border-box;
+}
+
+#moodnest-overlay .mn-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+#moodnest-overlay .mn-title {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#moodnest-overlay .mn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #6e56cf;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+#moodnest-overlay .mn-close {
+  cursor: pointer;
+  color: #8a8d96;
+  background: none;
+  border: none;
+  font-size: 14px;
+}
+#moodnest-overlay .mn-close:hover {
+  color: #e6e6e9;
+}
+
+#moodnest-overlay .mn-row {
+  display: flex;
+  justify-content: space-between;
+  color: #8a8d96;
+  font-size: 12px;
+  padding: 2px 0;
+}
+
+#moodnest-overlay .mn-row strong {
+  color: #e6e6e9;
+}
+
+#moodnest-overlay .mn-status {
+  margin-top: 6px;
+  color: #8a8d96;
+  font-size: 12px;
+  min-height: 16px;
+}
+
+#moodnest-overlay .mn-status.error {
+  color: #e5484d;
+}
+#moodnest-overlay .mn-status.success {
+  color: #6e56cf;
+}
+
+#moodnest-overlay .mn-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+#moodnest-overlay button.mn-btn {
+  flex: 1;
+  background: #262832;
+  color: #e6e6e9;
+  border: 1px solid #262832;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+#moodnest-overlay button.mn-btn:hover {
+  background: #1d1e23;
+}
+#moodnest-overlay button.mn-btn.primary {
+  background: #6e56cf;
+  border-color: #6e56cf;
+}
+#moodnest-overlay button.mn-btn.primary:hover {
+  background: #7c64e0;
+}
+#moodnest-overlay button.mn-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#moodnest-overlay .mn-list {
+  max-height: 100px;
+  overflow-y: auto;
+  margin: 6px 0;
+  border-top: 1px solid #1e1f25;
+  padding-top: 6px;
+}

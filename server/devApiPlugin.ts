@@ -30,6 +30,17 @@ export function devApiPlugin(): Plugin {
     configureServer(server) {
       const handler: Connect.NextHandleFunction = async (req, res, next) => {
         if (!req.url?.startsWith("/api/")) return next();
+
+        // Allow the browser extension (running from a chrome-extension:// origin) to call
+        // this local API directly. Fine for a single-user local dev server.
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        if (req.method === "OPTIONS") {
+          res.statusCode = 204;
+          return res.end();
+        }
+
         const url = new URL(req.url, "http://localhost");
         const path = url.pathname;
         const method = req.method ?? "GET";
@@ -109,6 +120,14 @@ export function devApiPlugin(): Plugin {
           if (pinMatch && method === "DELETE") {
             db.deletePin(pinMatch[1]);
             return send(res, 200, { ok: true });
+          }
+
+          if (path === "/api/import/bulk" && method === "POST") {
+            const body = await readJsonBody(req);
+            if (!body.boardName || !Array.isArray(body.pins)) {
+              return send(res, 400, { error: "boardName and pins[] required" });
+            }
+            return send(res, 201, db.bulkImport(body));
           }
 
           return send(res, 404, { error: "Not found" });

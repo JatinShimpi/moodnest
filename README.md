@@ -18,9 +18,16 @@ it's your personal board data, not source).
 
 ## Adding pins
 
-Paste a Pinterest pin URL into "Add pin" and hit Fetch — it calls Pinterest's public oEmbed
-endpoint (`pinterest.com/oembed.json`) via a tiny local dev-server proxy to pull the image and
-title automatically. If that fails (network/CORS-dependent), paste the image URL directly.
+**One at a time:** paste a Pinterest pin URL into "Add pin" and hit Fetch — it calls
+Pinterest's public oEmbed endpoint (`pinterest.com/oembed.json`) via a tiny local dev-server
+proxy to pull the image and title automatically. If that fails (network/CORS-dependent),
+paste the image URL directly.
+
+**Whole boards, with sections:** load the [browser extension](./extension/README.md) — it
+overlays a small panel on pinterest.com board pages, collects pins from whichever
+board/section page you're viewing (including private boards, since it just reads your own
+already-logged-in view), and sends everything to moodnest in one batch via
+`POST /api/import/bulk`, recreating nested sections automatically.
 
 ## Stack
 
