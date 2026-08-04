@@ -40,10 +40,15 @@ counts stay at 0 after a "Collect this page" click, Pinterest likely changed som
 open devtools and check whether `a[href*="/pin/"]` elements still exist on the page; the
 selectors in `content.js` may need updating.
 
-## Known issue — TODO
+## Known issue — recommendations filter (best-effort)
 
 Collecting a section page also picks up Pinterest's "More ideas" / recommended pins shown
-below the section's own pins (they're real pin-content images, same CDN pattern, so the
-current filter can't tell them apart from the section's actual content). Needs a container
-boundary check — likely find the section's own grid container and only collect images
-inside it, stopping before the recommendations block starts.
+below the section's own pins (real pin-content images, same CDN pattern, so the image
+filter alone can't tell them apart). Fixed with a text-based cutoff: `content.js` looks for
+a heading matching known recommendation phrases ("Find some ideas for this board", "More
+like this", etc.) and excludes any pin image that appears after it in document order.
+
+This is a heuristic, not a verified fix — if Pinterest uses different wording than what's
+in `RECOMMENDATION_HEADINGS`, it won't catch it. If pin counts are still too high after
+collecting a section, check what heading text actually precedes the recommendations block
+and add it to that list.

@@ -106,13 +106,46 @@
     return false;
   }
 
+  // Pinterest appends a recommendations block ("Find some ideas for this board:", "More
+  // like this", etc.) below the real pins on both root and section pages — same image CDN
+  // pattern, so the content filter alone can't tell them apart. Use the heading as a cutoff:
+  // anything after it in document order is a recommendation, not part of what you're viewing.
+  const RECOMMENDATION_HEADINGS = [
+    "find some ideas for this board",
+    "more like this",
+    "more ideas for you",
+    "related pins",
+    "similar pins",
+    "you might also like",
+    "more to explore",
+    "more ideas",
+  ];
+
+  function findRecommendationBoundary() {
+    const candidates = document.querySelectorAll("h1,h2,h3,h4,span,div,p,a");
+    for (const el of candidates) {
+      if (el.children.length > 0) continue; // want a leaf text holder, not a big wrapper
+      const text = el.textContent?.trim().toLowerCase();
+      if (!text || text.length > 60) continue;
+      if (RECOMMENDATION_HEADINGS.some((phrase) => text.includes(phrase))) return el;
+    }
+    return null;
+  }
+
+  function isPastBoundary(node, boundary) {
+    if (!boundary) return false;
+    return !!(boundary.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }
+
   function collectVisiblePins() {
     const sectionHrefs = new Set(detectSectionLinks().map((s) => s.href));
+    const boundary = findRecommendationBoundary();
     const seen = new Map();
     document.querySelectorAll("img").forEach((img) => {
       const rawSrc = img.currentSrc || img.getAttribute("src") || img.getAttribute("srcset")?.split(" ")[0];
       if (!rawSrc || !isPinContentImage(rawSrc)) return;
       if (isInsideSectionTileLink(img, sectionHrefs)) return;
+      if (isPastBoundary(img, boundary)) return;
       const key = imageKey(rawSrc);
       if (seen.has(key)) return;
       seen.set(key, {
