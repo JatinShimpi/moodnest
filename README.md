@@ -3,7 +3,8 @@
 Local-only creative workspace for organizing Pinterest pins into moodboards, with nested
 sections shown in the sidebar. No cloud, no AI — just import, organize, annotate.
 
-See [design.md](./design.md) for the locked design system.
+See [design.md](./design.md) for the locked design system and [PRIVACY.md](./PRIVACY.md)
+for the privacy policy (required for Pinterest developer app registration).
 
 ## Run it
 
