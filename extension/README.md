@@ -39,3 +39,11 @@ Pinterest's markup and class names change over time and aren't stable/semantic. 
 counts stay at 0 after a "Collect this page" click, Pinterest likely changed something —
 open devtools and check whether `a[href*="/pin/"]` elements still exist on the page; the
 selectors in `content.js` may need updating.
+
+## Known issue — TODO
+
+Collecting a section page also picks up Pinterest's "More ideas" / recommended pins shown
+below the section's own pins (they're real pin-content images, same CDN pattern, so the
+current filter can't tell them apart from the section's actual content). Needs a container
+boundary check — likely find the section's own grid container and only collect images
+inside it, stopping before the recommendations block starts.
