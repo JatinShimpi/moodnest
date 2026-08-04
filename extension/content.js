@@ -36,12 +36,39 @@
     return segments[2].replace(/-/g, " ");
   }
 
+  function slugToTitle(slug) {
+    return slug.replace(/-/g, " ").trim();
+  }
+
   function getBoardName() {
-    const h1 = document.querySelector("h1");
-    if (h1?.textContent?.trim()) return h1.textContent.trim();
+    // Pinterest renders multiple <h1>s (site logo included) — pick the most
+    // descriptive one rather than assuming the first is the board title.
+    const candidates = Array.from(document.querySelectorAll("h1"))
+      .map((h) => h.textContent?.trim())
+      .filter((t) => t && t.toLowerCase() !== "pinterest");
+    if (candidates.length) {
+      return candidates.reduce((longest, t) => (t.length > longest.length ? t : longest), candidates[0]);
+    }
     const og = document.querySelector('meta[property="og:title"]');
     if (og?.content) return og.content.split("|")[0].trim();
-    return document.title.split("|")[0].trim() || "Untitled board";
+    const segments = getPathSegments();
+    if (segments[1]) return slugToTitle(segments[1]);
+    return "Untitled board";
+  }
+
+  function detectSectionLinks() {
+    const segments = getPathSegments();
+    if (segments.length < 2) return [];
+    const boardPrefix = `/${segments[0]}/${segments[1]}/`;
+    const links = new Map();
+    document.querySelectorAll("a[href]").forEach((a) => {
+      const href = a.getAttribute("href") || "";
+      if (!href.startsWith(boardPrefix)) return;
+      const rest = href.slice(boardPrefix.length).replace(/\/$/, "");
+      if (!rest || rest.startsWith("_tools") || rest.includes("/") || rest.includes("?")) return;
+      links.set(rest, { name: slugToTitle(rest), href });
+    });
+    return Array.from(links.values());
   }
 
   function upsizeImage(url) {
@@ -156,11 +183,29 @@
     if (nameEl) nameEl.textContent = collection.boardName;
     if (!list) return;
 
+    const collectedSections = collection.sections || {};
     const rootCount = collection.root?.length || 0;
     const rows = [`<div class="mn-row"><span>(board root)</span><strong>${rootCount}</strong></div>`];
-    for (const [name, pins] of Object.entries(collection.sections || {})) {
-      rows.push(`<div class="mn-row"><span>${name}</span><strong>${pins.length}</strong></div>`);
+
+    const detected = detectSectionLinks();
+    const namesSeen = new Set();
+    for (const { name, href } of detected) {
+      namesSeen.add(name);
+      const count = collectedSections[name]?.length;
+      rows.push(
+        `<div class="mn-row"><a href="${href}" style="color:inherit;text-decoration:underline">${name}</a><strong>${
+          count ?? "—"
+        }</strong></div>`
+      );
     }
+    // Sections collected previously but not visible as links on the current page (e.g. you're on
+    // a section page right now, not the root) — still show their counts so nothing looks lost.
+    for (const [name, pins] of Object.entries(collectedSections)) {
+      if (!namesSeen.has(name)) {
+        rows.push(`<div class="mn-row"><span>${name}</span><strong>${pins.length}</strong></div>`);
+      }
+    }
+
     list.innerHTML = rows.join("");
   }
 
