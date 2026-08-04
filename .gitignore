@@ -1,0 +1,8 @@
+node_modules
+dist
+.DS_Store
+*.local
+*.tsbuildinfo
+
+# local personal data — don't commit your own pins/boards
+server/data.json
